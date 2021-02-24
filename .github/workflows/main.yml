@@ -2,14 +2,14 @@ name: Build job
 
 on:
   push:
-    branches: [ appimage-actions ]
+    branches: [ appimage ]
     paths-ignore:
       - '.github/*'
       - '.github/ISSUE_TEMPLATE/**'
       - '*.yml'
       - 'README.md'
   pull_request:
-    branches: [ appimage-actions ]
+    branches: [ appimage ]
     paths-ignore:
       - '.github/*'
       - '.github/ISSUE_TEMPLATE/**'
@@ -55,5 +55,5 @@ jobs:
             tar xfv ghr_v0.13.0_linux_amd64.tar.gz
             ghr_v0.13.0_linux_amd64/ghr -u qurious-pixel -r NHSE -recreate -n 'Continous build' -b "GitHub https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" continuous artifacts/
         env:
-          DEFAULT_BRANCH: appimage-actions
+          DEFAULT_BRANCH: appimage
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
