@@ -1,0 +1,59 @@
+name: Build job
+
+on:
+  push:
+    branches: [ appimage-actions ]
+    paths-ignore:
+      - '.github/*'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '*.yml'
+      - 'README.md'
+  pull_request:
+    branches: [ appimage-actions ]
+    paths-ignore:
+      - '.github/*'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '*.yml'
+      - 'README.md'
+  schedule:
+    - cron: "30 0 * * 3" 
+
+jobs:
+  build:
+    name: ${{ matrix.os }} (${{ matrix.configuration }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        configuration: [Release]
+      fail-fast: false
+    env:
+      POWERSHELL_TELEMETRY_OPTOUT: 1
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+      - name: Install Packages
+        run: sudo apt-get install -y p7zip-full coreutils cmake ninja-build zenity fuse ccache libsdl2-dev libalut-dev libglib2.0-0 libopenal-dev
+      - name: Clone
+        run: |
+            mkdir -p "$HOME/.ccache"
+            git clone --recursive https://github.com/kwsch/NHSE && cd NHSE
+            dotnet restore
+            dotnet publish -c Release -r linux-x64 -v n
+      - name: Build
+        run: |
+            ls -al ${pwd}
+            mkdir artifacts/
+            #cp ./NHSE-x86_64.AppImage* artifacts/
+      - name: Build
+        run: |
+            ls -al artifacts/
+            wget -c https://github.com/tcnksm/ghr/releases/download/v0.13.0/ghr_v0.13.0_linux_amd64.tar.gz
+            tar xfv ghr_v0.13.0_linux_amd64.tar.gz
+            ghr_v0.13.0_linux_amd64/ghr -u qurious-pixel -r NHSE -recreate -n 'Continous build' -b "GitHub https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" continuous artifacts/
+        env:
+          DEFAULT_BRANCH: appimage-actions
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
